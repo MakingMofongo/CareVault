@@ -29,6 +29,7 @@ class AppointmentResponse(BaseModel):
     created_at: datetime
     patient_name: str
     patient_email: str
+    doctor_name: str
 
     class Config:
         from_attributes = True
@@ -48,7 +49,7 @@ async def get_appointments(
             Appointment.patient_id == current_user.id
         ).order_by(Appointment.scheduled_at.desc()).all()
     
-    # Add patient details to each appointment
+    # Add patient and doctor details to each appointment
     appointment_list = []
     for apt in appointments:
         appointment_data = {
@@ -61,6 +62,7 @@ async def get_appointments(
             "created_at": apt.created_at,
             "patient_name": apt.patient.full_name,
             "patient_email": apt.patient.email,
+            "doctor_name": apt.doctor.full_name,
         }
         appointment_list.append(appointment_data)
     
@@ -89,7 +91,7 @@ async def create_appointment(
     db.commit()
     db.refresh(db_appointment)
     
-    # Return appointment with patient details
+    # Return appointment with patient and doctor details
     return {
         "id": db_appointment.id,
         "patient_id": db_appointment.patient_id,
@@ -100,6 +102,7 @@ async def create_appointment(
         "created_at": db_appointment.created_at,
         "patient_name": patient.full_name,
         "patient_email": patient.email,
+        "doctor_name": current_doctor.full_name,
     }
 
 
@@ -119,7 +122,7 @@ async def get_appointment(
     elif current_user.role == "patient" and appointment.patient_id != current_user.id:
         raise HTTPException(status_code=403, detail="Access forbidden")
     
-    # Return appointment with patient details
+    # Return appointment with patient and doctor details
     return {
         "id": appointment.id,
         "patient_id": appointment.patient_id,
@@ -130,4 +133,5 @@ async def get_appointment(
         "created_at": appointment.created_at,
         "patient_name": appointment.patient.full_name,
         "patient_email": appointment.patient.email,
+        "doctor_name": appointment.doctor.full_name,
     }

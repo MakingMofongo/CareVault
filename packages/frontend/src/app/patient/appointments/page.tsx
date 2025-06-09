@@ -34,7 +34,7 @@ interface Appointment {
   status: "scheduled" | "completed" | "cancelled" | "in_progress"
   patient_name: string
   patient_email: string
-  doctor_name?: string
+  doctor_name: string
   notes?: string
   created_at: string
 }
@@ -87,7 +87,7 @@ export default function PatientAppointments() {
     if (searchTerm) {
       filtered = filtered.filter(apt => 
         apt.reason.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (apt.doctor_name && apt.doctor_name.toLowerCase().includes(searchTerm.toLowerCase()))
+        apt.doctor_name.toLowerCase().includes(searchTerm.toLowerCase())
       )
     }
 
@@ -312,7 +312,7 @@ export default function PatientAppointments() {
                       </div>
                       <div className="flex items-center gap-2">
                         <User className="h-4 w-4" />
-                        <span>Dr. {appointment.doctor_name || "Healthcare Provider"}</span>
+                        <span>Dr. {appointment.doctor_name}</span>
                       </div>
                       <div className="flex items-center gap-2">
                         <MapPin className="h-4 w-4" />
@@ -392,7 +392,7 @@ export default function PatientAppointments() {
                   <div className="grid gap-3">
                     <div className="flex items-center gap-3">
                       <Stethoscope className="h-4 w-4 text-muted-foreground" />
-                      <span>Dr. {selectedAppointment.doctor_name || "Healthcare Provider"}</span>
+                      <span>Dr. {selectedAppointment.doctor_name}</span>
                     </div>
                     <div className="flex items-center gap-3">
                       <MapPin className="h-4 w-4 text-muted-foreground" />

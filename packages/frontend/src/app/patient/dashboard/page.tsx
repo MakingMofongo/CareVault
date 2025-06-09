@@ -40,6 +40,7 @@ interface Appointment {
   status: string
   patient_name: string
   patient_email: string
+  doctor_name: string
 }
 
 export default function PatientDashboard() {
@@ -250,6 +251,9 @@ export default function PatientDashboard() {
                     <div className="flex justify-between items-start">
                       <div>
                         <div className="font-medium text-blue-600 hover:text-blue-700">{appointment.reason}</div>
+                        <div className="text-sm text-muted-foreground">
+                          Dr. {appointment.doctor_name}
+                        </div>
                         <div className="text-sm text-muted-foreground">
                           {new Date(appointment.scheduled_at).toLocaleDateString()} at {new Date(appointment.scheduled_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
                         </div>
