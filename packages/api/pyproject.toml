@@ -19,6 +19,7 @@ dependencies = [
     "reportlab==4.4.1",
     "openai==1.58.1",
     "aiofiles==24.1.0",
+    "dotenv>=0.9.9",
 ]
 
 [project.optional-dependencies]

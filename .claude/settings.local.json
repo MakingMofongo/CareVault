@@ -5,7 +5,10 @@
       "Bash(npm install:*)",
       "Bash(pnpm install:*)",
       "Bash(npx create-next-app:*)",
-      "Bash(ls:*)"
+      "Bash(ls:*)",
+      "Bash(find:*)",
+      "Bash(cp:*)",
+      "Bash(rm:*)"
     ],
     "deny": []
   }

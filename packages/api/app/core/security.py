@@ -69,3 +69,7 @@ def require_role(role: str):
             )
         return current_user
     return role_checker
+
+
+get_current_doctor = require_role("doctor")
+get_current_patient = require_role("patient")

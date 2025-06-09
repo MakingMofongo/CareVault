@@ -9,11 +9,13 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
+import { useAuth } from '@/contexts/AuthContext';
 
 type UserRole = 'doctor' | 'patient';
 
 export default function LoginPage() {
   const router = useRouter();
+  const { login } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -25,34 +27,10 @@ export default function LoginPage() {
     setIsLoading(true);
 
     try {
-      const response = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email, password }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Invalid credentials');
-      }
-
-      const data = await response.json();
-      
-      // Store token in localStorage (in production, use secure HTTP-only cookies)
-      localStorage.setItem('access_token', data.access_token);
-      localStorage.setItem('user', JSON.stringify(data.user));
-
-      toast.success(`Welcome back, ${data.user.full_name}!`);
-
-      // Redirect based on role
-      if (data.user.role === 'doctor') {
-        router.push('/doctor/dashboard');
-      } else {
-        router.push('/patient/dashboard');
-      }
-    } catch (error) {
-      toast.error('Invalid email or password');
+      await login(email, password, role);
+      toast.success(`Welcome back!`);
+    } catch (error: any) {
+      toast.error(error.message || 'Invalid email or password');
     } finally {
       setIsLoading(false);
     }
@@ -198,6 +176,15 @@ export default function LoginPage() {
               </div>
             </CardFooter>
           </Card>
+          
+          <div className="text-center">
+            <p className="text-sm text-muted-foreground">
+              Don't have an account?{" "}
+              <Link href="/register" className="text-primary hover:underline">
+                Sign up here
+              </Link>
+            </p>
+          </div>
         </div>
       </div>
 

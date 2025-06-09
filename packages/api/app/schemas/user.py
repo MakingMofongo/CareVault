@@ -8,6 +8,18 @@ class UserBase(BaseModel):
     email: EmailStr
     full_name: str
     role: UserRole
+    
+    class Config:
+        use_enum_values = True
+
+
+class UserResponseBase(BaseModel):
+    email: str  # Use regular str for responses to avoid validation issues
+    full_name: str
+    role: UserRole
+    
+    class Config:
+        use_enum_values = True
 
 
 class UserCreate(UserBase):
@@ -25,7 +37,7 @@ class UserUpdate(BaseModel):
     specialization: Optional[str] = None
 
 
-class UserResponse(UserBase):
+class UserResponse(UserResponseBase):
     id: int
     is_active: bool
     created_at: datetime
@@ -36,3 +48,5 @@ class UserResponse(UserBase):
     
     class Config:
         from_attributes = True
+        # Ensure enums are serialized as their string values
+        use_enum_values = True

@@ -66,3 +66,4 @@ coverage/
 packages/api/carevault_api.egg-info
 pnpm-lock.yaml
 packages/frontend/package-lock.json
+library_docs
