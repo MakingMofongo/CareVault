@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button"
 import { toast } from "sonner"
 import { Calendar, FileText, Users, Plus } from "lucide-react"
 import Link from "next/link"
+import api from "@/lib/api"
 
 export default function DoctorDashboard() {
   const { user, loading } = useAuth()
@@ -63,6 +64,20 @@ export default function DoctorDashboard() {
     }
   }
 
+  const setupDemoData = async () => {
+    try {
+      const response = await api.post("/users/demo-setup")
+      if (response.data.error) {
+        toast.error(response.data.error)
+      } else {
+        toast.success("Demo data created! Patients can now login and see appointments.")
+        fetchStats() // Refresh stats
+      }
+    } catch (error) {
+      toast.error("Failed to create demo data")
+    }
+  }
+
   if (loading) {
     return <div className="flex items-center justify-center min-h-screen">Loading...</div>
   }
@@ -79,6 +94,14 @@ export default function DoctorDashboard() {
           <p className="text-muted-foreground">Manage your appointments and prescriptions</p>
         </div>
         <div className="space-x-4">
+          <Button
+            variant="secondary"
+            onClick={setupDemoData}
+            disabled={loading}
+          >
+            <Plus className="mr-2 h-4 w-4" />
+            Setup Demo
+          </Button>
           <Link href="/doctor/patients/new">
             <Button variant="outline">
               <Plus className="mr-2 h-4 w-4" />

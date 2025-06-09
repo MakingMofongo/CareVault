@@ -48,6 +48,18 @@ export default function LoginPage() {
     }
   };
 
+  const fillDemoPatient = (patient: 'john' | 'jane') => {
+    if (patient === 'john') {
+      setEmail('john.doe@example.com');
+      setPassword('patient123');
+      setRole('patient');
+    } else {
+      setEmail('jane.smith@example.com');
+      setPassword('patient123');
+      setRole('patient');
+    }
+  };
+
   return (
     <div className="min-h-screen flex">
       {/* Left side - Login form */}
@@ -162,7 +174,27 @@ export default function LoginPage() {
                   onClick={() => fillCredentials('doctor')}
                   className="text-xs"
                 >
-                  Use Doctor Login
+                  Demo Doctor
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => fillDemoPatient('john')}
+                  className="text-xs"
+                >
+                  John Doe (Patient)
+                </Button>
+              </div>
+              <div className="grid grid-cols-2 gap-2 w-full">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => fillDemoPatient('jane')}
+                  className="text-xs"
+                >
+                  Jane Smith (Patient)
                 </Button>
                 <Button
                   type="button"
@@ -171,7 +203,7 @@ export default function LoginPage() {
                   onClick={() => fillCredentials('patient')}
                   className="text-xs"
                 >
-                  Use Patient Login
+                  Demo Patient
                 </Button>
               </div>
             </CardFooter>

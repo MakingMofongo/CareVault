@@ -119,3 +119,58 @@ async def create_user(
         print(f"Error creating user: {e}")
         db.rollback()
         raise HTTPException(status_code=500, detail=f"Failed to create user: {str(e)}")
+
+
+@router.post("/demo-setup")
+async def setup_demo_data(
+    db: Session = Depends(get_db),
+):
+    """Create demo appointments for existing patients"""
+    from app.models.appointment import Appointment
+    from datetime import datetime, timedelta
+    
+    try:
+        # Find demo doctor
+        doctor = db.query(User).filter(User.email == "doctor@carevault.com").first()
+        if not doctor:
+            return {"error": "Demo doctor not found"}
+        
+        # Find demo patients
+        john = db.query(User).filter(User.email == "john.doe@example.com").first()
+        jane = db.query(User).filter(User.email == "jane.smith@example.com").first()
+        
+        created_appointments = []
+        
+        if john:
+            # Create appointment for John
+            john_apt = Appointment(
+                patient_id=john.id,
+                doctor_id=doctor.id,
+                scheduled_at=datetime.now() + timedelta(days=1),
+                reason="Regular checkup and health assessment",
+                status="scheduled"
+            )
+            db.add(john_apt)
+            created_appointments.append(f"Appointment for {john.full_name}")
+        
+        if jane:
+            # Create appointment for Jane  
+            jane_apt = Appointment(
+                patient_id=jane.id,
+                doctor_id=doctor.id,
+                scheduled_at=datetime.now() + timedelta(days=2),
+                reason="Follow-up consultation",
+                status="scheduled"
+            )
+            db.add(jane_apt)
+            created_appointments.append(f"Appointment for {jane.full_name}")
+        
+        db.commit()
+        
+        return {
+            "message": "Demo data created",
+            "appointments": created_appointments
+        }
+    except Exception as e:
+        db.rollback()
+        return {"error": str(e)}

@@ -64,7 +64,12 @@ export default function PatientDashboard() {
       ])
       setPrescriptions(prescriptionsRes.data)
       setAppointments(appointmentsRes.data)
+      console.log("Patient data loaded:", {
+        prescriptions: prescriptionsRes.data.length,
+        appointments: appointmentsRes.data.length
+      })
     } catch (error) {
+      console.error("Failed to load patient data:", error)
       toast.error("Failed to load your data")
     } finally {
       setLoadingData(false)

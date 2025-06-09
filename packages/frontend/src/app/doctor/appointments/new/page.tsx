@@ -19,6 +19,56 @@ interface Patient {
   phone_number?: string
 }
 
+// Helper function to extract error message from various error formats
+const getErrorMessage = (error: any): string => {
+  if (!error.response) {
+    return "Network error occurred"
+  }
+  
+  const data = error.response.data
+  
+  // Handle string error messages
+  if (typeof data === "string") {
+    return data
+  }
+  
+  // Handle detail field (common in FastAPI)
+  if (data?.detail) {
+    // If detail is a string, return it
+    if (typeof data.detail === "string") {
+      return data.detail
+    }
+    
+    // If detail is an array of validation errors
+    if (Array.isArray(data.detail)) {
+      return data.detail.map((err: any) => err.msg || err.message || "Validation error").join(", ")
+    }
+    
+    // If detail is an object
+    if (typeof data.detail === "object") {
+      return JSON.stringify(data.detail)
+    }
+  }
+  
+  // Handle validation errors directly in data
+  if (Array.isArray(data)) {
+    return data.map((err: any) => err.msg || err.message || "Validation error").join(", ")
+  }
+  
+  // Handle message field
+  if (data?.message) {
+    return data.message
+  }
+  
+  // Handle error field
+  if (data?.error) {
+    return data.error
+  }
+  
+  // Fallback
+  return `Error ${error.response.status}: ${error.response.statusText || "Something went wrong"}`
+}
+
 export default function NewAppointment() {
   const { user } = useAuth()
   const router = useRouter()
@@ -76,7 +126,9 @@ export default function NewAppointment() {
       // Now try creating the appointment again
       await createAppointment()
     } catch (error: any) {
-      toast.error(error.response?.data?.detail || "Failed to create patient")
+      console.error("Create patient error:", error)
+      const errorMessage = getErrorMessage(error)
+      toast.error(errorMessage)
     } finally {
       setCreatingPatient(false)
     }
@@ -172,7 +224,9 @@ export default function NewAppointment() {
     try {
       await createAppointment()
     } catch (error: any) {
-      toast.error(error.response?.data?.detail || "Failed to create appointment")
+      console.error("Create appointment error:", error)
+      const errorMessage = getErrorMessage(error)
+      toast.error(errorMessage)
     } finally {
       setLoading(false)
     }
