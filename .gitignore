@@ -65,3 +65,4 @@ coverage/
 *.tsbuildinfo
 packages/api/carevault_api.egg-info
 pnpm-lock.yaml
+packages/frontend/package-lock.json
