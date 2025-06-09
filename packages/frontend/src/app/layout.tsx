@@ -4,6 +4,13 @@ import './globals.css';
 import { ThemeProvider } from '@/components/theme-provider';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { Toaster } from '@/components/ui/sonner';
+import AccountSwitcher from '@/components/AccountSwitcher';
+
+function ConditionalAccountSwitcher() {
+  'use client';
+  // Show AccountSwitcher on all pages for demo purposes
+  return <AccountSwitcher />;
+}
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-sans' });
 
@@ -29,6 +36,7 @@ export default function RootLayout({
         >
           <AuthProvider>
             {children}
+            <ConditionalAccountSwitcher />
             <Toaster richColors position="top-right" />
           </AuthProvider>
         </ThemeProvider>

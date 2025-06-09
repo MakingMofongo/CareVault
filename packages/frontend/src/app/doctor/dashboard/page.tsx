@@ -18,6 +18,7 @@ export default function DoctorDashboard() {
     totalPatients: 0,
     recentPrescriptions: 0
   })
+  const [recentAppointments, setRecentAppointments] = useState<any[]>([])
 
   useEffect(() => {
     if (!loading && (!user || user.role !== "doctor")) {
@@ -41,11 +42,22 @@ export default function DoctorDashboard() {
       const prescriptionsResponse = await api.get("/prescriptions")
       const prescriptions = prescriptionsResponse.data
       
+      // Debug logging
+      console.log("Fetched appointments:", appointments)
+      console.log("Total appointments:", appointments.length)
+      
       // Calculate today's appointments
       const today = new Date().toISOString().split('T')[0]
-      const todayAppointments = appointments.filter((apt: any) => 
-        apt.scheduled_at.startsWith(today)
-      ).length
+      console.log("Today's date string:", today)
+      
+      const todayAppointments = appointments.filter((apt: any) => {
+        console.log("Appointment scheduled_at:", apt.scheduled_at)
+        const appointmentDate = apt.scheduled_at.split('T')[0]
+        console.log("Appointment date:", appointmentDate, "Today:", today, "Match:", appointmentDate === today)
+        return appointmentDate === today
+      }).length
+      
+      console.log("Today's appointments count:", todayAppointments)
       
       // Count recent prescriptions (last 7 days)
       const weekAgo = new Date()
@@ -54,11 +66,18 @@ export default function DoctorDashboard() {
         new Date(p.created_at) > weekAgo
       ).length
       
+      // Get recent appointments (next 5 upcoming or recent)
+      const now = new Date()
+      const sortedAppointments = appointments
+        .sort((a: any, b: any) => new Date(a.scheduled_at).getTime() - new Date(b.scheduled_at).getTime())
+        .slice(0, 5)
+      
       setStats({
         todayAppointments,
         totalPatients: patients.length,
         recentPrescriptions
       })
+      setRecentAppointments(sortedAppointments)
     } catch (error) {
       console.error("Failed to fetch stats:", error)
     }
@@ -153,49 +172,82 @@ export default function DoctorDashboard() {
       </div>
 
       <div className="grid gap-6 md:grid-cols-2">
-        <Card>
+        <Card className="hover:shadow-lg transition-shadow">
           <CardHeader>
             <CardTitle>Recent Appointments</CardTitle>
             <CardDescription>Your upcoming and recent appointments</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              <div className="text-sm text-muted-foreground text-center py-8">
-                No appointments scheduled yet
-              </div>
+              {recentAppointments.length === 0 ? (
+                <div className="text-sm text-muted-foreground text-center py-8">
+                  No appointments scheduled yet
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {recentAppointments.map((appointment: any) => (
+                    <div key={appointment.id} className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50 cursor-pointer transition-colors">
+                      <div>
+                        <p className="font-medium text-blue-600 hover:text-blue-700">{appointment.patient_name}</p>
+                        <p className="text-sm text-muted-foreground">{appointment.reason}</p>
+                        <div className="flex items-center gap-2 mt-1">
+                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                            appointment.status === 'completed' ? 'bg-green-100 text-green-800' :
+                            appointment.status === 'scheduled' ? 'bg-blue-100 text-blue-800' :
+                            appointment.status === 'in_progress' ? 'bg-yellow-100 text-yellow-800' :
+                            'bg-gray-100 text-gray-800'
+                          }`}>
+                            {appointment.status}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-sm font-medium">
+                          {new Date(appointment.scheduled_at).toLocaleDateString()}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {new Date(appointment.scheduled_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
               <Link href="/doctor/appointments" className="block">
-                <Button variant="outline" className="w-full">View All Appointments</Button>
+                <Button variant="outline" className="w-full hover:bg-blue-50 hover:text-blue-700 hover:border-blue-300">
+                  View All Appointments
+                </Button>
               </Link>
             </div>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="hover:shadow-lg transition-shadow">
           <CardHeader>
             <CardTitle>Quick Actions</CardTitle>
             <CardDescription>Common tasks and workflows</CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
             <Link href="/doctor/patients/new" className="block">
-              <Button variant="outline" className="w-full justify-start">
+              <Button variant="outline" className="w-full justify-start hover:bg-green-50 hover:text-green-700 hover:border-green-300 transition-colors">
                 <Plus className="mr-2 h-4 w-4" />
                 Create New Patient
               </Button>
             </Link>
             <Link href="/doctor/appointments/new" className="block">
-              <Button variant="outline" className="w-full justify-start">
+              <Button variant="outline" className="w-full justify-start hover:bg-blue-50 hover:text-blue-700 hover:border-blue-300 transition-colors">
                 <Calendar className="mr-2 h-4 w-4" />
                 Schedule New Appointment
               </Button>
             </Link>
             <Link href="/doctor/prescriptions/new" className="block">
-              <Button variant="outline" className="w-full justify-start">
+              <Button variant="outline" className="w-full justify-start hover:bg-purple-50 hover:text-purple-700 hover:border-purple-300 transition-colors">
                 <FileText className="mr-2 h-4 w-4" />
                 Create Prescription
               </Button>
             </Link>
             <Link href="/doctor/patients" className="block">
-              <Button variant="outline" className="w-full justify-start">
+              <Button variant="outline" className="w-full justify-start hover:bg-orange-50 hover:text-orange-700 hover:border-orange-300 transition-colors">
                 <Users className="mr-2 h-4 w-4" />
                 View Patient Records
               </Button>

@@ -38,24 +38,28 @@ export default function LoginPage() {
 
   const fillCredentials = (userRole: UserRole) => {
     if (userRole === 'doctor') {
-      setEmail('doctor@carevault.com');
-      setPassword('doctor123');
+      setEmail('doctor@demo.com');
+      setPassword('demo123');
       setRole('doctor');
     } else {
-      setEmail('patient@carevault.com');
-      setPassword('patient123');
+      setEmail('john.doe@demo.com');
+      setPassword('demo123');
       setRole('patient');
     }
   };
 
-  const fillDemoPatient = (patient: 'john' | 'jane') => {
+  const fillDemoPatient = (patient: 'john' | 'jane' | 'mike') => {
     if (patient === 'john') {
-      setEmail('john.doe@example.com');
-      setPassword('patient123');
+      setEmail('john.doe@demo.com');
+      setPassword('demo123');
+      setRole('patient');
+    } else if (patient === 'jane') {
+      setEmail('jane.smith@demo.com');
+      setPassword('demo123');
       setRole('patient');
     } else {
-      setEmail('jane.smith@example.com');
-      setPassword('patient123');
+      setEmail('mike.wilson@demo.com');
+      setPassword('demo123');
       setRole('patient');
     }
   };
@@ -174,7 +178,7 @@ export default function LoginPage() {
                   onClick={() => fillCredentials('doctor')}
                   className="text-xs"
                 >
-                  Demo Doctor
+                  Dr. Sarah Johnson
                 </Button>
                 <Button
                   type="button"
@@ -183,7 +187,7 @@ export default function LoginPage() {
                   onClick={() => fillDemoPatient('john')}
                   className="text-xs"
                 >
-                  John Doe (Patient)
+                  John Doe
                 </Button>
               </div>
               <div className="grid grid-cols-2 gap-2 w-full">
@@ -194,16 +198,16 @@ export default function LoginPage() {
                   onClick={() => fillDemoPatient('jane')}
                   className="text-xs"
                 >
-                  Jane Smith (Patient)
+                  Jane Smith
                 </Button>
                 <Button
                   type="button"
                   variant="outline"
                   size="sm"
-                  onClick={() => fillCredentials('patient')}
+                  onClick={() => fillDemoPatient('mike')}
                   className="text-xs"
                 >
-                  Demo Patient
+                  Mike Wilson
                 </Button>
               </div>
             </CardFooter>

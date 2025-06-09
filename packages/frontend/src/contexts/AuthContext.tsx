@@ -38,13 +38,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const checkAuth = async () => {
     try {
       const token = localStorage.getItem("token")
-      if (token) {
+      const userData = localStorage.getItem("user")
+      
+      console.log("Auth check - token:", !!token, "userData:", !!userData)
+      
+      if (token && userData) {
+        // Try to use stored user data first
+        const storedUser = JSON.parse(userData)
+        console.log("Loading user from localStorage:", storedUser)
+        setUser(storedUser)
+        api.defaults.headers.common["Authorization"] = `Bearer ${token}`
+      } else if (token) {
+        // Fallback to API call if no stored user data
         api.defaults.headers.common["Authorization"] = `Bearer ${token}`
         const response = await api.get("/auth/me")
         setUser(response.data)
+        localStorage.setItem("user", JSON.stringify(response.data))
       }
     } catch (error) {
+      console.error("Auth check failed:", error)
       localStorage.removeItem("token")
+      localStorage.removeItem("user")
       delete api.defaults.headers.common["Authorization"]
     } finally {
       setLoading(false)
@@ -52,6 +66,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   const login = async (email: string, password: string, role: string) => {
+    console.log(`Auth context login attempt: ${email} with role ${role}`)
+    
     const formData = new URLSearchParams()
     formData.append("username", email)
     formData.append("password", password)
@@ -61,30 +77,40 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         'Content-Type': 'application/x-www-form-urlencoded'
       }
     })
-    const { access_token } = response.data
+    
+    console.log("Auth login response:", response.data)
+    const { access_token, user } = response.data
 
     localStorage.setItem("token", access_token)
+    localStorage.setItem("user", JSON.stringify(user))
     api.defaults.headers.common["Authorization"] = `Bearer ${access_token}`
 
-    const userResponse = await api.get("/auth/me")
-    const userData = userResponse.data
+    // Use user data directly from login response (no need for /auth/me call)
+    console.log("User data from login:", user)
     
-    if (userData.role !== role) {
-      throw new Error(`Invalid role. Expected ${role}, got ${userData.role}`)
-    }
-    
-    setUser(userData)
+    setUser(user)
 
-    // Redirect based on role
-    if (userData.role === "doctor") {
-      router.push("/doctor/dashboard")
-    } else {
-      router.push("/patient/dashboard")
-    }
+    // Redirect based on actual user role, not requested role
+    console.log(`Redirecting user with role: ${user.role}`)
+    
+    // Use window.location.href for more reliable redirect
+    setTimeout(() => {
+      if (user.role === "doctor") {
+        console.log("Redirecting to doctor dashboard...")
+        window.location.href = "/doctor/dashboard"
+      } else if (user.role === "patient") {
+        console.log("Redirecting to patient dashboard...")
+        window.location.href = "/patient/dashboard"
+      } else {
+        console.error(`Unknown user role: ${user.role}`)
+        throw new Error(`Unknown user role: ${user.role}`)
+      }
+    }, 100) // Small delay to ensure user state is set
   }
 
   const logout = () => {
     localStorage.removeItem("token")
+    localStorage.removeItem("user")
     delete api.defaults.headers.common["Authorization"]
     setUser(null)
     router.push("/login")

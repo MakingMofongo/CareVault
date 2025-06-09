@@ -125,52 +125,142 @@ async def create_user(
 async def setup_demo_data(
     db: Session = Depends(get_db),
 ):
-    """Create demo appointments for existing patients"""
+    """Create demo users and appointments for testing"""
     from app.models.appointment import Appointment
     from datetime import datetime, timedelta
     
     try:
-        # Find demo doctor
-        doctor = db.query(User).filter(User.email == "doctor@carevault.com").first()
+        created_items = []
+        
+        # Create demo doctor if not exists
+        doctor = db.query(User).filter(User.email == "doctor@demo.com").first()
         if not doctor:
-            return {"error": "Demo doctor not found"}
-        
-        # Find demo patients
-        john = db.query(User).filter(User.email == "john.doe@example.com").first()
-        jane = db.query(User).filter(User.email == "jane.smith@example.com").first()
-        
-        created_appointments = []
-        
-        if john:
-            # Create appointment for John
-            john_apt = Appointment(
-                patient_id=john.id,
-                doctor_id=doctor.id,
-                scheduled_at=datetime.now() + timedelta(days=1),
-                reason="Regular checkup and health assessment",
-                status="scheduled"
+            doctor = User(
+                email="doctor@demo.com",
+                hashed_password=get_password_hash("demo123"),
+                full_name="Dr. Sarah Johnson",
+                role=UserRole.DOCTOR,
+                license_number="MD12345",
+                specialization="Family Medicine",
+                phone_number="(555) 123-4567"
             )
-            db.add(john_apt)
-            created_appointments.append(f"Appointment for {john.full_name}")
+            db.add(doctor)
+            created_items.append("Demo Doctor: Dr. Sarah Johnson")
         
-        if jane:
-            # Create appointment for Jane  
-            jane_apt = Appointment(
-                patient_id=jane.id,
-                doctor_id=doctor.id,
-                scheduled_at=datetime.now() + timedelta(days=2),
-                reason="Follow-up consultation",
-                status="scheduled"
-            )
-            db.add(jane_apt)
-            created_appointments.append(f"Appointment for {jane.full_name}")
+        # Create demo patients if not exist
+        patients_data = [
+            {
+                "email": "john.doe@demo.com",
+                "full_name": "John Doe",
+                "phone": "(555) 987-6543",
+                "dob": "1985-03-15"
+            },
+            {
+                "email": "jane.smith@demo.com", 
+                "full_name": "Jane Smith",
+                "phone": "(555) 456-7890",
+                "dob": "1990-07-22"
+            },
+            {
+                "email": "mike.wilson@demo.com",
+                "full_name": "Michael Wilson", 
+                "phone": "(555) 234-5678",
+                "dob": "1978-11-08"
+            }
+        ]
+        
+        created_patients = []
+        for patient_data in patients_data:
+            existing_patient = db.query(User).filter(User.email == patient_data["email"]).first()
+            if not existing_patient:
+                patient = User(
+                    email=patient_data["email"],
+                    hashed_password=get_password_hash("demo123"),
+                    full_name=patient_data["full_name"],
+                    role=UserRole.PATIENT,
+                    phone_number=patient_data["phone"],
+                    date_of_birth=datetime.fromisoformat(patient_data["dob"])
+                )
+                db.add(patient)
+                created_patients.append(patient)
+                created_items.append(f"Demo Patient: {patient_data['full_name']}")
+            else:
+                created_patients.append(existing_patient)
+        
+        # Commit users first
+        db.commit()
+        
+        # Refresh doctor to get ID
+        if doctor.id is None:
+            db.refresh(doctor)
+        
+        # Create demo appointments
+        appointment_data = [
+            {
+                "patient": created_patients[0],
+                "days_offset": 1,
+                "reason": "Annual physical examination",
+                "status": "scheduled"
+            },
+            {
+                "patient": created_patients[1], 
+                "days_offset": 2,
+                "reason": "Follow-up consultation for medication review",
+                "status": "scheduled"
+            },
+            {
+                "patient": created_patients[2],
+                "days_offset": -1,
+                "reason": "Routine check-up and blood work review",
+                "status": "completed"
+            },
+            {
+                "patient": created_patients[0],
+                "days_offset": -7,
+                "reason": "Initial consultation for back pain",
+                "status": "completed"
+            }
+        ]
+        
+        for apt_data in appointment_data:
+            # Check if appointment already exists
+            existing_apt = db.query(Appointment).filter(
+                Appointment.patient_id == apt_data["patient"].id,
+                Appointment.doctor_id == doctor.id,
+                Appointment.reason == apt_data["reason"]
+            ).first()
+            
+            if not existing_apt:
+                appointment = Appointment(
+                    patient_id=apt_data["patient"].id,
+                    doctor_id=doctor.id,
+                    scheduled_at=datetime.now() + timedelta(days=apt_data["days_offset"]),
+                    reason=apt_data["reason"],
+                    status=apt_data["status"]
+                )
+                db.add(appointment)
+                created_items.append(f"Appointment: {apt_data['patient'].full_name} - {apt_data['reason']}")
         
         db.commit()
         
         return {
-            "message": "Demo data created",
-            "appointments": created_appointments
+            "message": "Demo data created successfully!",
+            "created": created_items,
+            "note": "All demo accounts use password 'demo123' or can be accessed without password via account switcher"
         }
     except Exception as e:
         db.rollback()
         return {"error": str(e)}
+
+
+@router.get("/demo", response_model=list[UserResponse])
+async def list_demo_users(db: Session = Depends(get_db)):
+    """Public endpoint to list ALL users for account switching - NO AUTH REQUIRED"""
+    try:
+        # Return ALL users for demo purposes (no authentication required)
+        users = db.query(User).all()
+        print(f"Found {len(users)} users for demo switcher")
+        return users
+    except Exception as e:
+        print(f"Error listing demo users: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to list demo users: {str(e)}")

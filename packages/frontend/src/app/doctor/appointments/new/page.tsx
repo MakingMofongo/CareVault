@@ -80,6 +80,7 @@ export default function NewAppointment() {
   const [formData, setFormData] = useState({
     selectedPatientId: "",
     selectedPatientEmail: "",
+    selectedPatientName: "",
     date: "",
     time: "",
     reason: ""
@@ -123,6 +124,13 @@ export default function NewAppointment() {
       toast.success("Patient created successfully!")
       setShowCreatePatient(false)
       
+      // Set the newly created patient's info in the form
+      setFormData(prev => ({
+        ...prev,
+        selectedPatientEmail: patientFormData.email,
+        selectedPatientName: patientFormData.full_name
+      }))
+      
       // Now try creating the appointment again
       await createAppointment()
     } catch (error: any) {
@@ -138,6 +146,7 @@ export default function NewAppointment() {
     try {
       const appointmentDateTime = `${formData.date}T${formData.time}:00`
       const response = await api.post("/appointments", {
+        patient_name: formData.selectedPatientName,
         patient_email: formData.selectedPatientEmail,
         appointment_date: appointmentDateTime,
         reason: formData.reason,
@@ -157,7 +166,8 @@ export default function NewAppointment() {
       setFormData(prev => ({
         ...prev,
         selectedPatientId: patientId,
-        selectedPatientEmail: patient.email
+        selectedPatientEmail: patient.email,
+        selectedPatientName: patient.full_name
       }))
     }
   }
@@ -204,7 +214,7 @@ export default function NewAppointment() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
-    if (!formData.selectedPatientEmail) {
+    if (!formData.selectedPatientEmail || !formData.selectedPatientName) {
       toast.error("Please select a patient")
       return
     }
@@ -225,6 +235,7 @@ export default function NewAppointment() {
       await createAppointment()
     } catch (error: any) {
       console.error("Create appointment error:", error)
+      console.error("Error response data:", error.response?.data)
       const errorMessage = getErrorMessage(error)
       toast.error(errorMessage)
     } finally {
