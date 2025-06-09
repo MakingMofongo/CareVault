@@ -1,0 +1,25 @@
+{
+  "name": "carevault",
+  "version": "0.1.0",
+  "private": true,
+  "description": "CareVault POC - Streamlined clinical workflow with AI-powered decision support",
+  "scripts": {
+    "dev": "cross-env NODIST_PREFIX=\"C:\\Program Files (x86)\\Nodist\" turbo run dev",
+    "build": "turbo run build",
+    "start": "turbo run start",
+    "lint": "turbo run lint",
+    "test": "turbo run test",
+    "clean": "turbo run clean",
+    "format": "prettier --write \"**/*.{js,jsx,ts,tsx,json,css,md}\""
+  },
+  "devDependencies": {
+    "cross-env": "^7.0.3",
+    "prettier": "^3.5.3",
+    "turbo": "^2.5.4"
+  },
+  "packageManager": "pnpm@8.12.1",
+  "engines": {
+    "node": ">=18.17.0",
+    "pnpm": ">=8.0.0"
+  }
+}
