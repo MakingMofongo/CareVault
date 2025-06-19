@@ -14,16 +14,16 @@ from app.core.security import get_current_active_user, get_current_doctor
 from app.models.user import User
 from app.models.prescription import Prescription
 from app.models.share_token import ShareToken
-from pydantic import BaseModel
+from pydantic import BaseModel, Field, constr
 import secrets
 
 router = APIRouter()
 
 
 class MedicationItem(BaseModel):
-    name: str
-    dosage: str
-    frequency: str
+    name: constr(min_length=1, strip_whitespace=True)
+    dosage: constr(min_length=1, strip_whitespace=True)
+    frequency: constr(min_length=1, strip_whitespace=True)
 
 
 class PrescriptionCreate(BaseModel):
@@ -98,68 +98,83 @@ async def create_prescription(
     current_doctor: User = Depends(get_current_doctor),
     db: Session = Depends(get_db),
 ):
-    # Verify appointment exists and belongs to the doctor
-    from app.models.appointment import Appointment
-    appointment = db.query(Appointment).filter(
-        Appointment.id == prescription.appointment_id,
-        Appointment.doctor_id == current_doctor.id
-    ).first()
-    if not appointment:
-        raise HTTPException(status_code=404, detail="Appointment not found or access denied")
-    
-    # Create share token
-    share_token = secrets.token_urlsafe(32)
-    
-    # Create prescription
-    db_prescription = Prescription(
-        appointment_id=prescription.appointment_id,
-        medications=[med.dict() for med in prescription.medications],
-        ai_summary=prescription.ai_summary,
-        ai_interactions=prescription.ai_interactions,
-        status="draft"
-    )
-    db.add(db_prescription)
-    db.commit()
-    db.refresh(db_prescription)
-    
-    # Create share token record
-    db_share_token = ShareToken(
-        token=share_token,
-        prescription_id=db_prescription.id,
-        is_active=True
-    )
-    db.add(db_share_token)
-    db.commit()
-    
-    # Generate QR code
-    qr = qrcode.QRCode(version=1, box_size=10, border=5)
-    share_url = f"http://localhost:3000/share/{share_token}"
-    qr.add_data(share_url)
-    qr.make(fit=True)
-    
-    img = qr.make_image(fill_color="black", back_color="white")
-    buffer = io.BytesIO()
-    img.save(buffer, format='PNG')
-    qr_base64 = base64.b64encode(buffer.getvalue()).decode()
-    
-    # Prepare response with derived fields
-    response_data = {
-        "id": db_prescription.id,
-        "appointment_id": db_prescription.appointment_id,
-        "medications": db_prescription.medications,
-        "ai_summary": db_prescription.ai_summary,
-        "ai_interactions": db_prescription.ai_interactions,
-        "status": db_prescription.status,
-        "pdf_url": db_prescription.pdf_url,
-        "qr_code": f"data:image/png;base64,{qr_base64}",
-        "share_token": share_token,
-        "created_at": db_prescription.created_at,
-        "patient_email": appointment.patient.email,
-        "patient_name": appointment.patient.full_name,
-        "doctor_name": current_doctor.full_name
-    }
-    
-    return response_data
+    try:
+        # Verify appointment exists and belongs to the doctor
+        from app.models.appointment import Appointment
+        appointment = db.query(Appointment).filter(
+            Appointment.id == prescription.appointment_id,
+            Appointment.doctor_id == current_doctor.id
+        ).first()
+        if not appointment:
+            raise HTTPException(status_code=404, detail="Appointment not found or access denied")
+        
+        # Create share token
+        share_token = secrets.token_urlsafe(32)
+        
+        # Convert medications to a list of dictionaries
+        medications_list = []
+        for med in prescription.medications:
+            medications_list.append({
+                "name": med.name,
+                "dosage": med.dosage,
+                "frequency": med.frequency
+            })
+        
+        # Create prescription
+        db_prescription = Prescription(
+            appointment_id=prescription.appointment_id,
+            medications=medications_list,
+            ai_summary=prescription.ai_summary,
+            ai_interactions=prescription.ai_interactions if prescription.ai_interactions else {},
+            status="draft"
+        )
+        db.add(db_prescription)
+        db.commit()
+        db.refresh(db_prescription)
+        
+        # Create share token record
+        db_share_token = ShareToken(
+            token=share_token,
+            prescription_id=db_prescription.id,
+            is_active=True
+        )
+        db.add(db_share_token)
+        db.commit()
+        
+        # Generate QR code
+        qr = qrcode.QRCode(version=1, box_size=10, border=5)
+        share_url = f"http://localhost:3000/share/{share_token}"
+        qr.add_data(share_url)
+        qr.make(fit=True)
+        
+        img = qr.make_image(fill_color="black", back_color="white")
+        buffer = io.BytesIO()
+        img.save(buffer, format='PNG')
+        qr_base64 = base64.b64encode(buffer.getvalue()).decode()
+        
+        # Prepare response with derived fields
+        response_data = {
+            "id": db_prescription.id,
+            "appointment_id": db_prescription.appointment_id,
+            "medications": medications_list,
+            "ai_summary": db_prescription.ai_summary,
+            "ai_interactions": db_prescription.ai_interactions or {},
+            "status": db_prescription.status,
+            "pdf_url": db_prescription.pdf_url,
+            "qr_code": f"data:image/png;base64,{qr_base64}",
+            "share_token": share_token,
+            "created_at": db_prescription.created_at,
+            "patient_email": appointment.patient.email if appointment.patient else None,
+            "patient_name": appointment.patient.full_name if appointment.patient else None,
+            "doctor_name": current_doctor.full_name
+        }
+        
+        return response_data
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        print(f"Error creating prescription: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error creating prescription: {str(e)}")
 
 
 @router.get("/{prescription_id}", response_model=PrescriptionResponse)
