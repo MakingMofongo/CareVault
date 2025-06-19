@@ -65,6 +65,7 @@ export default function NewPrescription() {
   ])
   const [interactions, setInteractions] = useState<any>(null)
   const [activeSuggestion, setActiveSuggestion] = useState<number | null>(null)
+  const [openSuggestionIndex, setOpenSuggestionIndex] = useState<number | null>(null)
   const suggestionRefs = useRef<(HTMLDivElement | null)[]>([])
 
   // Load appointments for this doctor
@@ -181,9 +182,12 @@ export default function NewPrescription() {
           placeholder="Enter medicine name"
           value={med.name}
           autoComplete="off"
+          onFocus={() => setOpenSuggestionIndex(index)}
+          onBlur={() => setTimeout(() => setOpenSuggestionIndex(null), 100)}
           onChange={e => {
             updateMedication(index, "name", e.target.value)
             setActiveSuggestion(null)
+            setOpenSuggestionIndex(index)
           }}
           onKeyDown={e => {
             if (filteredSuggestions.length === 0) return
@@ -194,12 +198,13 @@ export default function NewPrescription() {
             } else if (e.key === "Enter" && activeSuggestion !== null) {
               updateMedication(index, "name", filteredSuggestions[activeSuggestion])
               setActiveSuggestion(null)
+              setOpenSuggestionIndex(null)
               e.preventDefault()
             }
           }}
           className="pr-10"
         />
-        {filteredSuggestions.length > 0 && med.name && (
+        {openSuggestionIndex === index && filteredSuggestions.length > 0 && (
           <div className="absolute z-10 mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg max-h-48 overflow-auto">
             {filteredSuggestions.map((name, i) => (
               <div
@@ -209,6 +214,7 @@ export default function NewPrescription() {
                 onMouseDown={() => {
                   updateMedication(index, "name", name)
                   setActiveSuggestion(null)
+                  setOpenSuggestionIndex(null)
                 }}
                 onMouseEnter={() => setActiveSuggestion(i)}
               >

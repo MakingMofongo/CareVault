@@ -91,7 +91,7 @@ async def check_interactions(
             prompt = f"""You are a clinical pharmacist. Analyze the following medications for potential interactions. Your summary will be shared with both healthcare professionals and patients, so it should be informative, accurate, and easy to understand.
 
 Medications: {', '.join(request.medications)}
-{f'Known interactions from RxNav: {', '.join(interaction_pairs)}' if interaction_pairs else ''}
+(f"Known interactions from RxNav: {', '.join(interaction_pairs)}" if interaction_pairs else '')
 
 Please provide:
 1. A clear explanation of any significant drug interactions, using simple language for patients but including clinical details for doctors.
