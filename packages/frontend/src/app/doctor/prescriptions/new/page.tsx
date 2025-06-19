@@ -17,6 +17,7 @@ interface Medication {
   name: string
   dosage: string
   frequency: string
+  timing?: string
 }
 
 interface Appointment {
@@ -61,7 +62,7 @@ export default function NewPrescription() {
   const [selectedAppointmentId, setSelectedAppointmentId] = useState<number | null>(null)
   const [aiSummary, setAiSummary] = useState("")
   const [medications, setMedications] = useState<Medication[]>([
-    { name: "", dosage: "", frequency: "" }
+    { name: "", dosage: "", frequency: "", timing: "" }
   ])
   const [interactions, setInteractions] = useState<any>(null)
   const [activeSuggestion, setActiveSuggestion] = useState<number | null>(null)
@@ -82,7 +83,7 @@ export default function NewPrescription() {
   }, [])
 
   const addMedication = () => {
-    setMedications([...medications, { name: "", dosage: "", frequency: "" }])
+    setMedications([...medications, { name: "", dosage: "", frequency: "", timing: "" }])
   }
 
   const removeMedication = (index: number) => {
@@ -319,6 +320,22 @@ export default function NewPrescription() {
                             onChange={(e) => updateMedication(index, "frequency", e.target.value)}
                             required
                           />
+                        </div>
+                        <div className="space-y-2 col-span-2">
+                          <Label>Timing</Label>
+                          <Select
+                            value={med.timing || ""}
+                            onValueChange={(value) => updateMedication(index, "timing", value)}
+                            required
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select timing" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="before food">Before Food</SelectItem>
+                              <SelectItem value="after food">After Food</SelectItem>
+                            </SelectContent>
+                          </Select>
                         </div>
                       </div>
                     </div>
