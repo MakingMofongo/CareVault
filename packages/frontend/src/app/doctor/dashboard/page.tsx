@@ -42,22 +42,9 @@ export default function DoctorDashboard() {
       const prescriptionsResponse = await api.get("/prescriptions")
       const prescriptions = prescriptionsResponse.data
       
-      // Debug logging
-      console.log("Fetched appointments:", appointments)
-      console.log("Total appointments:", appointments.length)
-      
       // Calculate today's appointments
       const today = new Date().toISOString().split('T')[0]
-      console.log("Today's date string:", today)
-      
-      const todayAppointments = appointments.filter((apt: any) => {
-        console.log("Appointment scheduled_at:", apt.scheduled_at)
-        const appointmentDate = apt.scheduled_at.split('T')[0]
-        console.log("Appointment date:", appointmentDate, "Today:", today, "Match:", appointmentDate === today)
-        return appointmentDate === today
-      }).length
-      
-      console.log("Today's appointments count:", todayAppointments)
+      const todayAppointments = appointments.filter((apt: any) => apt.scheduled_at.split('T')[0] === today)
       
       // Count recent prescriptions (last 7 days)
       const weekAgo = new Date()
@@ -66,18 +53,34 @@ export default function DoctorDashboard() {
         new Date(p.created_at) > weekAgo
       ).length
       
-      // Get recent appointments (next 5 upcoming or recent)
-      const now = new Date()
-      const sortedAppointments = appointments
+      // Get up to 2 of today's appointments, sorted by time
+      let recentToShow = todayAppointments
         .sort((a: any, b: any) => new Date(a.scheduled_at).getTime() - new Date(b.scheduled_at).getTime())
-        .slice(0, 5)
+        .slice(0, 2)
+      
+      // If fewer than 2, fill with upcoming appointments
+      if (recentToShow.length < 2) {
+        const now = new Date()
+        const upcoming = appointments
+          .filter((a: any) => new Date(a.scheduled_at) > now && a.scheduled_at.split('T')[0] !== today)
+          .sort((a: any, b: any) => new Date(a.scheduled_at).getTime() - new Date(b.scheduled_at).getTime())
+        recentToShow = recentToShow.concat(upcoming.slice(0, 2 - recentToShow.length))
+      }
+      // If still fewer than 2, fill with most recent past appointments
+      if (recentToShow.length < 2) {
+        const now = new Date()
+        const past = appointments
+          .filter((a: any) => new Date(a.scheduled_at) < now && a.scheduled_at.split('T')[0] !== today)
+          .sort((a: any, b: any) => new Date(b.scheduled_at).getTime() - new Date(a.scheduled_at).getTime())
+        recentToShow = recentToShow.concat(past.slice(0, 2 - recentToShow.length))
+      }
       
       setStats({
-        todayAppointments,
+        todayAppointments: todayAppointments.length,
         totalPatients: patients.length,
         recentPrescriptions
       })
-      setRecentAppointments(sortedAppointments)
+      setRecentAppointments(recentToShow)
     } catch (error) {
       console.error("Failed to fetch stats:", error)
     }
