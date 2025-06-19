@@ -116,7 +116,7 @@ export default function PatientDashboard() {
           </Link>
           <Link href="/patient/appointments/new">
             <Button variant="default" className="hover:bg-green-50 hover:text-green-700 hover:border-green-300">
-              + Create Appointment
+              Schedule Appointment
             </Button>
           </Link>
         </div>
