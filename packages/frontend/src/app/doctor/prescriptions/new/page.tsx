@@ -108,12 +108,15 @@ export default function NewPrescription() {
 
     setLoading(true)
     try {
-      const response = await api.post("/prescriptions", {
+      const payload: any = {
         appointment_id: selectedAppointmentId,
         medications: validMedications,
-        ai_summary: aiSummary,
-        ai_interactions: interactions
-      })
+        ai_summary: aiSummary
+      }
+      if (interactions) {
+        payload.ai_interactions = interactions
+      }
+      const response = await api.post("/prescriptions", payload)
 
       toast.success("Prescription created successfully!")
       router.push(`/doctor/prescriptions/${response.data.id}`)
