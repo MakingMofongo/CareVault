@@ -185,7 +185,7 @@ export default function DoctorDashboard() {
                 </div>
               ) : (
                 <div className="space-y-3">
-                  {recentAppointments.map((appointment: any) => (
+                  {recentAppointments.slice(0, 2).map((appointment: any) => (
                     <div key={appointment.id} className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50 cursor-pointer transition-colors">
                       <div>
                         <p className="font-medium text-blue-600 hover:text-blue-700">{appointment.patient_name}</p>
