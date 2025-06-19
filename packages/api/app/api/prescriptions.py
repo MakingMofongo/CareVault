@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 from datetime import datetime
 import json
 import qrcode
@@ -40,7 +40,7 @@ class PrescriptionResponse(BaseModel):
     ai_summary: str = None
     ai_interactions: Dict[str, Any] = None
     status: str
-    pdf_url: str = None
+    pdf_url: Optional[str] = None
     qr_code: str = None
     share_token: str = None
     created_at: datetime

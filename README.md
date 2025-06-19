@@ -33,7 +33,9 @@ CareVault is a proof-of-concept frontend application that demonstrates how patie
    cd packages/api
    pip install uv
    uv pip install -e .
-   cd ../..
+
+   # then run this script
+   .venv\Scripts\python.exe -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
    ```
 
 3. **Set up environment variables**
