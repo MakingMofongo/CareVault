@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { useRouter } from "next/navigation"
 import { useAuth } from "@/contexts/AuthContext"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -27,6 +27,31 @@ interface Appointment {
   reason: string
 }
 
+// Add a static list of medicine name suggestions
+const MEDICINE_SUGGESTIONS = [
+  "Paracetamol",
+  "Ibuprofen",
+  "Amoxicillin",
+  "Aspirin",
+  "Metformin",
+  "Atorvastatin",
+  "Omeprazole",
+  "Simvastatin",
+  "Losartan",
+  "Azithromycin",
+  "Levothyroxine",
+  "Lisinopril",
+  "Amlodipine",
+  "Metoprolol",
+  "Albuterol",
+  "Gabapentin",
+  "Hydrochlorothiazide",
+  "Sertraline",
+  "Furosemide",
+  "Pantoprazole",
+  "Prednisone"
+];
+
 export default function NewPrescription() {
   const { user } = useAuth()
   const router = useRouter()
@@ -39,6 +64,8 @@ export default function NewPrescription() {
     { name: "", dosage: "", frequency: "" }
   ])
   const [interactions, setInteractions] = useState<any>(null)
+  const [activeSuggestion, setActiveSuggestion] = useState<number | null>(null)
+  const suggestionRefs = useRef<(HTMLDivElement | null)[]>([])
 
   // Load appointments for this doctor
   useEffect(() => {
@@ -140,6 +167,60 @@ export default function NewPrescription() {
     }
   }
 
+  const renderMedicineInput = (med: Medication, index: number) => {
+    // Filter suggestions based on input
+    const filteredSuggestions = MEDICINE_SUGGESTIONS.filter(name =>
+      med.name && name.toLowerCase().includes(med.name.toLowerCase())
+    ).slice(0, 8)
+
+    return (
+      <div className="relative">
+        <Label htmlFor={`medication-name-${index}`}>Medicine Name</Label>
+        <Input
+          id={`medication-name-${index}`}
+          placeholder="Enter medicine name"
+          value={med.name}
+          autoComplete="off"
+          onChange={e => {
+            updateMedication(index, "name", e.target.value)
+            setActiveSuggestion(null)
+          }}
+          onKeyDown={e => {
+            if (filteredSuggestions.length === 0) return
+            if (e.key === "ArrowDown") {
+              setActiveSuggestion(prev => prev === null ? 0 : Math.min(prev + 1, filteredSuggestions.length - 1))
+            } else if (e.key === "ArrowUp") {
+              setActiveSuggestion(prev => prev === null ? filteredSuggestions.length - 1 : Math.max(prev - 1, 0))
+            } else if (e.key === "Enter" && activeSuggestion !== null) {
+              updateMedication(index, "name", filteredSuggestions[activeSuggestion])
+              setActiveSuggestion(null)
+              e.preventDefault()
+            }
+          }}
+          className="pr-10"
+        />
+        {filteredSuggestions.length > 0 && med.name && (
+          <div className="absolute z-10 mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg max-h-48 overflow-auto">
+            {filteredSuggestions.map((name, i) => (
+              <div
+                key={name}
+                ref={el => suggestionRefs.current[i] = el}
+                className={`px-4 py-2 cursor-pointer hover:bg-blue-100 ${activeSuggestion === i ? "bg-blue-100" : ""}`}
+                onMouseDown={() => {
+                  updateMedication(index, "name", name)
+                  setActiveSuggestion(null)
+                }}
+                onMouseEnter={() => setActiveSuggestion(i)}
+              >
+                {name}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    )
+  }
+
   return (
     <div className="container mx-auto p-6 max-w-3xl">
       <Card>
@@ -201,13 +282,7 @@ export default function NewPrescription() {
                     <div className="space-y-3">
                       <div className="flex gap-2 items-end">
                         <div className="flex-1 space-y-2">
-                          <Label>Medication Name</Label>
-                          <Input
-                            placeholder="e.g., Amoxicillin"
-                            value={med.name}
-                            onChange={(e) => updateMedication(index, "name", e.target.value)}
-                            required
-                          />
+                          {renderMedicineInput(med, index)}
                         </div>
                         {medications.length > 1 && (
                           <Button

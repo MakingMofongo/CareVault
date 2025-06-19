@@ -84,20 +84,21 @@ async def check_interactions(
     # Use OpenAI to generate a summary if API key is available
     openai_api_key = os.getenv("OPENAI_API_KEY")
     
-    if openai_api_key and (interaction_pairs or len(request.medications) > 2):
+    if openai_api_key:
         try:
             client = OpenAI(api_key=openai_api_key)
             
-            prompt = f"""As a clinical pharmacist, analyze these medications for potential interactions:
+            prompt = f"""You are a clinical pharmacist. Analyze the following medications for potential interactions. Your summary will be shared with both healthcare professionals and patients, so it should be informative, accurate, and easy to understand.
+
 Medications: {', '.join(request.medications)}
-{f'Known interactions from RxNav: {", ".join(interaction_pairs)}' if interaction_pairs else ''}
+{f'Known interactions from RxNav: {', '.join(interaction_pairs)}' if interaction_pairs else ''}
 
-Provide a brief, clinically relevant summary of:
-1. Any significant drug interactions
-2. Severity of interactions (if any)
-3. Clinical recommendations
+Please provide:
+1. A clear explanation of any significant drug interactions, using simple language for patients but including clinical details for doctors.
+2. The severity of any interactions (if any), and what symptoms or side effects to watch for.
+3. Practical advice for both patients and clinicians (e.g., when to seek help, possible alternatives, or monitoring tips).
 
-Keep the response concise and focused on actionable information."""
+Keep the summary concise, friendly, and actionable. Avoid medical jargon where possible, and explain any necessary terms."""
 
             response = client.chat.completions.create(
                 model="gpt-4o-mini",
