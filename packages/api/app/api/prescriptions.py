@@ -37,8 +37,8 @@ class PrescriptionResponse(BaseModel):
     id: int
     appointment_id: int
     medications: List[Dict[str, str]]
-    ai_summary: str = None
-    ai_interactions: Dict[str, Any] = None
+    ai_summary: Optional[str] = None
+    ai_interactions: Optional[Dict[str, Any]] = None
     status: str
     pdf_url: Optional[str] = None
     qr_code: str = None

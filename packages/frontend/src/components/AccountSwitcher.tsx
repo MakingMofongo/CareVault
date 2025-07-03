@@ -45,7 +45,7 @@ export default function AccountSwitcher() {
         u.role === "doctor" || u.role === "patient"
       )
       setDemoUsers(users)
-      console.log(`Loaded ${users.length} demo users:`, users.map(u => u.full_name))
+      console.log(`Loaded ${users.length} demo users:`, users.map((u: DemoUser) => u.full_name))
     } catch (error) {
       console.error("Failed to fetch demo users:", error)
       // Clear users list on error
@@ -128,7 +128,7 @@ export default function AccountSwitcher() {
               Switch between accounts for testing purposes
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-4 max-h-[400px] overflow-y-auto scrollbar-thin scrollbar-thumb-rounded scrollbar-thumb-blue-200 scrollbar-track-blue-50 dark:scrollbar-thumb-blue-800 dark:scrollbar-track-blue-950">
             {/* Current User */}
             {user && (
               <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">

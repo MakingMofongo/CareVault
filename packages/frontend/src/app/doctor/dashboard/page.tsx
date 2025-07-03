@@ -66,18 +66,39 @@ export default function DoctorDashboard() {
         new Date(p.created_at) > weekAgo
       ).length
       
-      // Get recent appointments (next 5 upcoming or recent)
-      const now = new Date()
-      const sortedAppointments = appointments
-        .sort((a: any, b: any) => new Date(a.scheduled_at).getTime() - new Date(b.scheduled_at).getTime())
-        .slice(0, 5)
+      // Get up to 2 appointments for today, then upcoming, then past
+      const now = new Date();
+      const todayStr = now.toISOString().split('T')[0];
+      const todaysAppointments = appointments.filter((a: any) => a.scheduled_at.split('T')[0] === todayStr)
+        .sort((a: any, b: any) => new Date(a.scheduled_at).getTime() - new Date(b.scheduled_at).getTime());
+      const upcomingAppointments = appointments.filter((a: any) => new Date(a.scheduled_at) > now)
+        .sort((a: any, b: any) => new Date(a.scheduled_at).getTime() - new Date(b.scheduled_at).getTime());
+      const pastAppointments = appointments.filter((a: any) => new Date(a.scheduled_at) < now && a.scheduled_at.split('T')[0] !== todayStr)
+        .sort((a: any, b: any) => new Date(b.scheduled_at).getTime() - new Date(a.scheduled_at).getTime());
+
+      let recent: any[] = [];
+      if (todaysAppointments.length >= 2) {
+        recent = todaysAppointments.slice(0, 2);
+      } else if (todaysAppointments.length === 1) {
+        if (upcomingAppointments.length > 0) {
+          recent = [todaysAppointments[0], upcomingAppointments[0]];
+        } else if (pastAppointments.length > 0) {
+          recent = [todaysAppointments[0], pastAppointments[0]];
+        } else {
+          recent = [todaysAppointments[0]];
+        }
+      } else if (upcomingAppointments.length > 0) {
+        recent = upcomingAppointments.slice(0, 2);
+      } else {
+        recent = pastAppointments.slice(0, 2);
+      }
+      setRecentAppointments(recent);
       
       setStats({
         todayAppointments,
         totalPatients: patients.length,
         recentPrescriptions
       })
-      setRecentAppointments(sortedAppointments)
     } catch (error) {
       console.error("Failed to fetch stats:", error)
     }
@@ -185,7 +206,7 @@ export default function DoctorDashboard() {
                 </div>
               ) : (
                 <div className="space-y-3">
-                  {recentAppointments.map((appointment: any) => (
+                  {recentAppointments.slice(0, 2).map((appointment: any) => (
                     <div key={appointment.id} className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50 cursor-pointer transition-colors">
                       <div>
                         <p className="font-medium text-blue-600 hover:text-blue-700">{appointment.patient_name}</p>

@@ -114,6 +114,11 @@ export default function PatientDashboard() {
               My Appointments
             </Button>
           </Link>
+          <Link href="/patient/appointments/new">
+            <Button variant="default" className="hover:bg-green-50 hover:text-green-700 hover:border-green-300">
+              Schedule Appointment
+            </Button>
+          </Link>
         </div>
       </div>
 
@@ -178,7 +183,7 @@ export default function PatientDashboard() {
                   No prescriptions yet
                 </div>
               ) : (
-                prescriptions.slice(0, 3).map((prescription) => (
+                prescriptions.slice(0, 2).map((prescription) => (
                   <div key={prescription.id} className="border rounded-lg p-4 space-y-3 hover:bg-gray-50 cursor-pointer transition-colors">
                     <div className="flex justify-between items-start">
                       <div>
@@ -192,7 +197,7 @@ export default function PatientDashboard() {
                           </div>
                         )}
                       </div>
-                      {prescription.ai_interactions?.interactions?.length > 0 && (
+                      {Array.isArray(prescription.ai_interactions?.interactions) && prescription.ai_interactions.interactions.length > 0 && (
                         <AlertCircle className="h-4 w-4 text-yellow-500" />
                       )}
                     </div>
@@ -225,10 +230,12 @@ export default function PatientDashboard() {
                 ))
               )}
               
-              {prescriptions.length > 3 && (
-                <Button variant="outline" className="w-full hover:bg-purple-50 hover:text-purple-700 hover:border-purple-300">
-                  View All Prescriptions
-                </Button>
+              {prescriptions.length > 2 && (
+                <Link href="/patient/prescriptions">
+                  <Button variant="outline" className="w-full hover:bg-purple-50 hover:text-purple-700 hover:border-purple-300">
+                    View All Prescriptions
+                  </Button>
+                </Link>
               )}
             </div>
           </CardContent>
@@ -246,7 +253,7 @@ export default function PatientDashboard() {
                   No appointments yet
                 </div>
               ) : (
-                appointments.slice(0, 3).map((appointment) => (
+                appointments.slice(0, 2).map((appointment) => (
                   <div key={appointment.id} className="border rounded-lg p-4 hover:bg-gray-50 cursor-pointer transition-colors">
                     <div className="flex justify-between items-start">
                       <div>
@@ -271,7 +278,7 @@ export default function PatientDashboard() {
                 ))
               )}
               
-              {appointments.length > 3 && (
+              {appointments.length > 2 && (
                 <Link href="/patient/appointments">
                   <Button variant="outline" className="w-full hover:bg-blue-50 hover:text-blue-700 hover:border-blue-300">
                     View All Appointments
